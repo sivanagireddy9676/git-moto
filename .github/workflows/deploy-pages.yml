@@ -10,17 +10,30 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository (full)
+        uses: actions/checkout@v4
         with:
           persist-credentials: true
+          fetch-depth: 0
 
       - name: Setup Node (for build step if needed)
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
+      - name: Ensure site directory exists
+        run: |
+          if [ ! -d "site" ]; then echo "site directory not found"; exit 1; fi
+
+      - name: Configure git user for deploy commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site
+          publish_branch: gh-pages
+          keep_files: false
