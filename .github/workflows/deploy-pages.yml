@@ -1,0 +1,46 @@
+name: Deploy static site to GitHub Pages
+
+on:
+  push:
+    branches:
+      - feature/deploy-pages
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java (for Maven site build)
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build site (Maven site plugin)
+        run: |
+          mvn -B -DskipTests site
+
+      - name: Ensure site directory exists
+        run: |
+          if [ ! -d "target/site" ]; then echo "site directory not found at target/site"; exit 1; fi
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v3
+        with:
+          enablement: true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages
+          path: ./target/site
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
